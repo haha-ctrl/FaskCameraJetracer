@@ -28,7 +28,7 @@ public class LiveCameraJetracer extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setBuiltInZoomControls(true);
         webSettings.setLoadWithOverviewMode(true);
-        webView.setInitialScale(110);
+        webView.setInitialScale(210);
 
         // Connect to the streaming server
         connectToStream();
@@ -42,7 +42,7 @@ public class LiveCameraJetracer extends AppCompatActivity {
 
         // Extract saved web address
         SharedPreferences sharedPref = getSharedPreferences("userConf", Context.MODE_PRIVATE);
-        String ip = sharedPref.getString("serverIp", "192.168.1.12");
+        String ip = sharedPref.getString("serverIp", "192.168.1.14");
         Log.i(TAG, "http://" + ip + ":5000");
 
         // Setup URL

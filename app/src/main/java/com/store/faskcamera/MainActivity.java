@@ -11,8 +11,10 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -30,7 +32,10 @@ import android.widget.Toast;
 import com.dvinfosys.model.ChildModel;
 import com.dvinfosys.model.HeaderModel;
 import com.dvinfosys.ui.NavigationListView;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.w3c.dom.Text;
 
@@ -49,6 +54,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationListView listView;
 
     private Context context;
+
+    private String token;
+
+    private BroadcastReceiver mReceiver;
+
+    private SendMessage pidgeon = new SendMessage();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         listView.init(this)
                 .addHeaderModel(new HeaderModel("Home"))
                 .addHeaderModel(new HeaderModel("Jetracer"))
+                .addHeaderModel(new HeaderModel("Jetracer control"))
                 .build()
                 .addOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
                     @Override
@@ -88,6 +100,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                         if (id == 1) {
                             Intent intent = new Intent(MainActivity.this, LiveCameraJetracer.class);
+                            startActivity(intent);
+                        }
+                        if (id == 2) {
+                            Intent intent = new Intent(MainActivity.this, JetracerControlActivity.class);
                             startActivity(intent);
                         }
                         return false;
@@ -103,6 +119,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+        getFCMToken();
+
+
+        // BROADCAST RECIEVER IS NOT NEEDED ANYMORE FOR REASONS DECLARED IN MYFIREBASE CLASS
+        IntentFilter intentFilter = new IntentFilter(
+                "com.store.faskcamera");
+        mReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Toast.makeText(MainActivity.this, "Warning: Detection! Switch to video stream", Toast.LENGTH_LONG).show();
+            }
+        };
+        this.registerReceiver(mReceiver, intentFilter);
+    }
+
+    private void getFCMToken() {
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                String token = task.getResult();
+                pidgeon.execute("token="+token);
+                Log.i("My token", token);
+            } else {
+                Log.i("Task failed", "failed");
+            }
+        });
 
     }
 
@@ -162,6 +203,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 
 }
